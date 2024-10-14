@@ -9,6 +9,7 @@
     {
         private readonly TicketingDbContext _context;
         private readonly string _secretKey;
+        private readonly IConfiguration configuration;
 
         public AuthService(TicketingDbContext context, IConfiguration configuration)
         {

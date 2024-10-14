@@ -33,9 +33,9 @@ namespace TicketApp.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login(LoginReq loginReq)
         {
-            var token = _authService.Authenticate(username, password);
+            var token = _authService.Authenticate(loginReq.Username, loginReq.Password);
             if (token == null) return Unauthorized();
             return Ok(new { Token = token });
         }

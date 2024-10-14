@@ -11,10 +11,10 @@ namespace TicketApp.Models
 
         public int UserId { get; set; }
 
-        public string TicketId { get; set; }
+        public string? TicketId { get; set; }
 
         public DateTime OrderDate { get; set; } = DateTime.Now;
-
-        public virtual User User { get; set; }
+        [JsonIgnore]
+        public virtual User? User { get; set; }
     }
 }

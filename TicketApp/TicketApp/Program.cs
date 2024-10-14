@@ -25,13 +25,21 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<AuthService>();
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+builder.Services.AddScoped<AuthService>(); 
+string key = builder.Configuration["Jwt:Key"]  ?? throw new InvalidOperationException("JWT Key is missing from the configuration.");
+if (string.IsNullOrEmpty(key))
+{
+    throw new InvalidOperationException("JWT Key is missing from the configuration.");
+}
+
+byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -42,7 +50,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
     };
 });
 
@@ -78,6 +86,13 @@ c.AddSecurityRequirement(new OpenApiSecurityRequirement
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://localhost:4200") // Replace with your frontend URL
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -88,7 +103,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("AllowSpecificOrigin");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
